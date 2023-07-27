@@ -37,7 +37,7 @@ namespace ServerApp
             //return returnImage;
         }
 
-        private static BitmapImage LoadImage(byte[] imageData)
+        private async static Task<BitmapImage> LoadImage(byte[] imageData)
         {
             if (imageData == null || imageData.Length == 0) return null;
             var image = new BitmapImage();
@@ -55,6 +55,8 @@ namespace ServerApp
             return image;
         }
 
+        
+
         private void OpenServerBtn_Click(object sender, RoutedEventArgs e)
         {
             this.Dispatcher.Invoke(() =>
@@ -69,14 +71,15 @@ namespace ServerApp
                     InfoLbl.Content = $"Listen Over {socket.LocalEndPoint}";
 
                     var client = socket.Accept();
-                    Task.Run(() =>
+                    Task.Run(async () =>
                     {
                         var length = 0;
                         var bytes = new byte[30000];
                         do
                         {
                             length = client.Receive(bytes);
-                            AcceptImage.Source = LoadImage(bytes) as ImageSource;
+                            AcceptImage.Source = await LoadImage(bytes) as ImageSource;
+                            break;
                         } while (true);
                     });
                 }
