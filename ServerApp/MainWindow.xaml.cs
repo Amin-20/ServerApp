@@ -57,10 +57,12 @@ namespace ServerApp
 
         private void OpenServerBtn_Click(object sender, RoutedEventArgs e)
         {
-            Task.Run(() =>
+
+            this.Dispatcher.Invoke(() =>
             {
-                this.Dispatcher.Invoke(() =>
+                Task.Run(() =>
                 {
+
                     var ipAdress = IPAddress.Parse("10.1.18.2");
                     var port = 27001;
                     using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
@@ -83,6 +85,7 @@ namespace ServerApp
                             } while (true);
                         });
                     }
+
                 });
             });
         }
