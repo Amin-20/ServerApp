@@ -26,8 +26,6 @@ namespace ServerApp
         public MainWindow()
         {
             InitializeComponent();
-
-
         }
 
         public void byteArrayToImage(byte[] byteArrayIn)
@@ -37,7 +35,7 @@ namespace ServerApp
             //return returnImage;
         }
 
-        private async static Task<BitmapImage> LoadImage(byte[] imageData)
+        public static BitmapImage LoadImage(byte[] imageData)
         {
             if (imageData == null || imageData.Length == 0) return null;
             var image = new BitmapImage();
@@ -55,34 +53,37 @@ namespace ServerApp
             return image;
         }
 
-        
+
 
         private void OpenServerBtn_Click(object sender, RoutedEventArgs e)
         {
-            this.Dispatcher.Invoke(() =>
+            Task.Run(() =>
             {
-                var ipAdress = IPAddress.Parse("192.168.1.30");
-                var port = 80;
-                using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
+                this.Dispatcher.Invoke(() =>
                 {
-                    var ep = new IPEndPoint(ipAdress, port);
-                    socket.Bind(ep);
-                    socket.Listen(10);
-                    InfoLbl.Content = $"Listen Over {socket.LocalEndPoint}";
-
-                    var client = socket.Accept();
-                    Task.Run(async () =>
+                    var ipAdress = IPAddress.Parse("10.1.18.2");
+                    var port = 27001;
+                    using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
                     {
-                        var length = 0;
-                        var bytes = new byte[30000];
-                        do
+                        var ep = new IPEndPoint(ipAdress, port);
+                        socket.Bind(ep);
+                        socket.Listen(10);
+                        InfoLbl.Content = $"Listen Over {socket.LocalEndPoint}";
+
+                        var client = socket.Accept();
+                        Task.Run(() =>
                         {
-                            length = client.Receive(bytes);
-                            AcceptImage.Source = await LoadImage(bytes) as ImageSource;
-                            break;
-                        } while (true);
-                    });
-                }
+                            var length = 0;
+                            var bytes = new byte[30000];
+                            do
+                            {
+                                length = client.Receive(bytes);
+                                AcceptImage.Source = LoadImage(bytes) as ImageSource;
+                                break;
+                            } while (true);
+                        });
+                    }
+                });
             });
         }
     }
