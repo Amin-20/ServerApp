@@ -33,13 +33,6 @@ namespace ServerApp
             InitializeComponent();
         }
 
-        public void byteArrayToImage(byte[] byteArrayIn)
-        {
-            MemoryStream ms = new MemoryStream(byteArrayIn);
-            // Image returnImage = Image.FromStream(ms);
-            //return returnImage;
-        }
-
         public string LoadImage(byte[] buffer)
         {
 
@@ -62,36 +55,12 @@ namespace ServerApp
             }
         }
 
-        //public static BitmapImage LoadImage(byte[] imageData)
-        //{
-        //    if (imageData == null || imageData.Length == 0) return null;
-        //    var image = new BitmapImage();
-        //    using (var mem = new MemoryStream(imageData))
-        //    {
-        //        mem.Position = 0;
-        //        image.BeginInit();
-        //        image.CreateOptions = BitmapCreateOptions.PreservePixelFormat;
-        //        image.CacheOption = BitmapCacheOption.OnLoad;
-        //        image.UriSource = null;
-        //        image.StreamSource = mem;
-        //        image.EndInit();
-        //    }
-        //    image.Freeze();
-        //    return image;
-        //}
-
-
-
         private void OpenServerBtn_Click(object sender, RoutedEventArgs e)
         {
-
-
-
             this.Dispatcher.Invoke(() =>
             {
                 Task.Run(() =>
                 {
-
                     var ipAdress = IPAddress.Parse("192.168.1.48");
                     var port = 80;
                     using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
@@ -107,10 +76,9 @@ namespace ServerApp
 
                         var client = socket.Accept();
                         Task.Run(() =>
-                    {
+                        {
                         this.Dispatcher?.Invoke(() =>
                             {
-
                                 var length = 0;
                                 var bytes = new byte[30000];
                                 do
@@ -121,14 +89,10 @@ namespace ServerApp
                                     break;
                                 } while (true);
                             });
-                    });
+                        });
                     }
-
                 });
             });
-
-
-
         }
     }
 }
