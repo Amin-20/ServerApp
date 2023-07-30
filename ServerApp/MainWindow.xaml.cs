@@ -15,6 +15,11 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.IO;
+using System.Net.NetworkInformation;
+using System.Drawing;
+using Path = System.IO.Path;
+using Image = System.Drawing.Image;
+using System.Threading;
 
 namespace ServerApp
 {
@@ -35,57 +40,95 @@ namespace ServerApp
             //return returnImage;
         }
 
-        public static BitmapImage LoadImage(byte[] imageData)
+        public string LoadImage(byte[] buffer)
         {
-            if (imageData == null || imageData.Length == 0) return null;
-            var image = new BitmapImage();
-            using (var mem = new MemoryStream(imageData))
+
+            ImageConverter ic = new ImageConverter();
+            var data = ic.ConvertFrom(buffer);
+            Image img = data as Image;
+            if (img != null)
             {
-                mem.Position = 0;
-                image.BeginInit();
-                image.CreateOptions = BitmapCreateOptions.PreservePixelFormat;
-                image.CacheOption = BitmapCacheOption.OnLoad;
-                image.UriSource = null;
-                image.StreamSource = mem;
-                image.EndInit();
+                Bitmap bitmap1 = new Bitmap(img);
+                var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Images2");
+                Directory.CreateDirectory(path);
+                var strGuid = Guid.NewGuid().ToString();
+                bitmap1.Save($@"{path}\image {strGuid}.png");
+                var imagepath = $@"{path}\image{strGuid}.png";
+                return imagepath;
             }
-            image.Freeze();
-            return image;
+            else
+            {
+                return String.Empty;
+            }
         }
+
+        //public static BitmapImage LoadImage(byte[] imageData)
+        //{
+        //    if (imageData == null || imageData.Length == 0) return null;
+        //    var image = new BitmapImage();
+        //    using (var mem = new MemoryStream(imageData))
+        //    {
+        //        mem.Position = 0;
+        //        image.BeginInit();
+        //        image.CreateOptions = BitmapCreateOptions.PreservePixelFormat;
+        //        image.CacheOption = BitmapCacheOption.OnLoad;
+        //        image.UriSource = null;
+        //        image.StreamSource = mem;
+        //        image.EndInit();
+        //    }
+        //    image.Freeze();
+        //    return image;
+        //}
 
 
 
         private void OpenServerBtn_Click(object sender, RoutedEventArgs e)
         {
 
+
+
             this.Dispatcher.Invoke(() =>
             {
                 Task.Run(() =>
                 {
-                    var ipAdress = IPAddress.Parse("10.1.18.2");
-                    var port = 27001;
+
+                    var ipAdress = IPAddress.Parse("192.168.1.48");
+                    var port = 80;
                     using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
                     {
                         var ep = new IPEndPoint(ipAdress, port);
                         socket.Bind(ep);
                         socket.Listen(10);
-                        InfoLbl.Content = $"Listen Over {socket.LocalEndPoint}";
+                        this.Dispatcher.Invoke(() =>
+                        {
+
+                            InfoLbl.Content = $"Listen Over {socket.LocalEndPoint}";
+                        });
 
                         var client = socket.Accept();
                         Task.Run(() =>
-                        {
-                            var length = 0;
-                            var bytes = new byte[30000];
-                            do
+                    {
+                        this.Dispatcher?.Invoke(() =>
                             {
-                                length = client.Receive(bytes);
-                                AcceptImage.Source = LoadImage(bytes) as ImageSource;
-                                break;
-                            } while (true);
-                        });
+
+                                var length = 0;
+                                var bytes = new byte[30000];
+                                do
+                                {
+                                    Thread.Sleep(1000);
+                                    length = client.Receive(bytes);
+                                    AcceptImage.Source = new BitmapImage(new Uri(LoadImage(bytes)));
+                                    break;
+                                } while (true);
+                            });
+                    });
                     }
+
                 });
             });
+
+
+
         }
     }
 }
